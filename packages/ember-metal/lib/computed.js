@@ -317,8 +317,8 @@ ComputedPropertyPrototype.didChange = function(obj, keyName) {
   }
 
   let cache = meta.readableCache();
-  if (cache && cache[keyName] !== undefined) {
-    cache[keyName] = undefined;
+  if (cache && cache.get(keyName) !== undefined) {
+    cache.set(keyName, undefined);
     removeDependentKeys(this, obj, keyName, meta);
   }
 };
@@ -330,8 +330,8 @@ ComputedPropertyPrototype.get = function(obj, keyName) {
 
   let meta = metaFor(obj);
   let cache = meta.writableCache();
+  let result = cache.get(keyName);
 
-  let result = cache[keyName];
   if (result === UNDEFINED) {
     return undefined;
   } else if (result !== undefined) {
@@ -340,9 +340,9 @@ ComputedPropertyPrototype.get = function(obj, keyName) {
 
   let ret = this._getter.call(obj, keyName);
   if (ret === undefined) {
-    cache[keyName] = UNDEFINED;
+    cache.set(keyName, UNDEFINED);
   } else {
-    cache[keyName] = ret;
+    cache.set(keyName, ret);
   }
 
   let chainWatchers = meta.readableChainWatchers();
@@ -401,10 +401,12 @@ ComputedPropertyPrototype._set = function computedPropertySet(obj, keyName, valu
   // either there is a writable cache or we need one to update
   let cache          = meta.writableCache();
   let hadCachedValue = false;
+  let rawCachedValue = cache.get(keyName);
   let cachedValue;
-  if (cache[keyName] !== undefined) {
-    if (cache[keyName] !== UNDEFINED) {
-      cachedValue = cache[keyName];
+
+  if (rawCachedValue !== undefined) {
+    if (rawCachedValue !== UNDEFINED) {
+      cachedValue = rawCachedValue;
     }
     hadCachedValue = true;
   }
@@ -419,7 +421,7 @@ ComputedPropertyPrototype._set = function computedPropertySet(obj, keyName, valu
   propertyWillChange(obj, keyName);
 
   if (hadCachedValue) {
-    cache[keyName] = undefined;
+    cache.set(keyName, undefined);
   }
 
   if (!hadCachedValue) {
@@ -427,9 +429,9 @@ ComputedPropertyPrototype._set = function computedPropertySet(obj, keyName, valu
   }
 
   if (ret === undefined) {
-    cache[keyName] = UNDEFINED;
+    cache.set(keyName, UNDEFINED);
   } else {
-    cache[keyName] = ret;
+    cache.set(keyName, ret);
   }
 
   propertyDidChange(obj, keyName);
@@ -444,9 +446,9 @@ ComputedPropertyPrototype.teardown = function(obj, keyName) {
   }
   let meta = metaFor(obj);
   let cache = meta.readableCache();
-  if (cache && cache[keyName] !== undefined) {
+  if (cache && cache.get(keyName) !== undefined) {
     removeDependentKeys(this, obj, keyName, meta);
-    cache[keyName] = undefined;
+    cache.set(keyName, undefined);
   }
 };
 
@@ -569,7 +571,7 @@ export default function computed(func) {
 function cacheFor(obj, key) {
   var meta = peekMeta(obj);
   var cache = meta && meta.source === obj && meta.readableCache();
-  var ret = cache && cache[key];
+  var ret = cache && cache.get(key);
 
   if (ret === UNDEFINED) {
     return undefined;
@@ -579,14 +581,14 @@ function cacheFor(obj, key) {
 
 cacheFor.set = function(cache, key, value) {
   if (value === undefined) {
-    cache[key] = UNDEFINED;
+    cache.set(key, UNDEFINED);
   } else {
-    cache[key] = value;
+    cache.set(key, value);
   }
 };
 
 cacheFor.get = function(cache, key) {
-  var ret = cache[key];
+  var ret = cache.get(key);
   if (ret === UNDEFINED) {
     return undefined;
   }
@@ -594,7 +596,7 @@ cacheFor.get = function(cache, key) {
 };
 
 cacheFor.remove = function(cache, key) {
-  cache[key] = undefined;
+  cache.set(key, undefined);
 };
 
 export {
