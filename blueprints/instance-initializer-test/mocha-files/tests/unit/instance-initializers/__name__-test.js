@@ -23,7 +23,7 @@ describe('<%= friendlyTestName %>', function() {
   it('works', function() {
     initialize(appInstance);
 
-    // you would normally confirm the results of the initializer here
+    // you would normally confirm the results of the instance initializer here
     expect(true).to.be.ok;
   });
 });
